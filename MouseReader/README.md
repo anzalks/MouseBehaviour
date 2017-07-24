@@ -1,5 +1,7 @@
 # Dependencies 
 
+	$ sudo apt install python-usb
+
 ## ./mouse.py 
 
 sudo zypper/apt/yum install python-xlib

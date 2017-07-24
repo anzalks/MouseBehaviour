@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """read_mouse_delta.py: 
 
 """
@@ -10,12 +12,23 @@ __maintainer__       = "Dilawar Singh"
 __email__            = "dilawars@ncbs.res.in"
 __status__           = "Development"
 
+import sys
+import io
 import struct
 import os
 import time
 import math
 import threading
 import Queue
+import usb.core 
+
+# Find the gaming mouse.
+mouse_ = usb.core.find( idVendor = 0x046D, idProduct = 0xc24e )
+assert mouse_ is not None, "Could not find gaming mouse"
+
+mouse_.set_configuration( )
+if mouse_.is_kernel_driver_active(0):
+    mouse_.detach_kernel_driver(0)
 
 user_ = os.environ.get( 'USER', ' ' )
 
@@ -27,7 +40,7 @@ def getMouseEvent( mouseF, q ):
     while True:
         if user_interrupt_:
             break 
-        buf = mouseF.read(3);
+        buf = mouseF.read( 0x81, 3, 1 );
         x,y = struct.unpack( "bb", buf[1:] );
         t = time.time( )
         q.put( (t, x, y) )
@@ -48,12 +61,11 @@ def printMouse( q ):
             print( 'velocity = % 8.3f, % 8.3f' % (v, theta) )
 
 
-
 def main( ):
+    global mouse_
     global user_interrupt_
     q = Queue.Queue( )
-    f = open( "/dev/input/mouse1", "rb" ) 
-    readT = threading.Thread( name = 'get_mouse', target=getMouseEvent, args=(f,q))
+    readT = threading.Thread( name = 'get_mouse', target=getMouseEvent, args=(mouse_,q))
     writeT = threading.Thread( name = 'print_mouse', target=printMouse, args=(q,) )
     readT.daemon = True
     writeT.daemon = True
@@ -68,6 +80,7 @@ def main( ):
         user_interrupt_ = True 
     except Exception as e:
         user_interrupt_ = True
+    mouse_.close( )
     print( '> All done' )
 
 if __name__ == '__main__':
