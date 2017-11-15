@@ -170,3 +170,68 @@ add_custom_target( threadmill
 
 # Now  add the client and server 
 add_subdirectory( ${CMAKE_SOURCE_DIR}/PointGreyCamera )
+
+# NANA
+add_definitions( -DWITH_NANA )
+set( NANA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/nana )
+set( NANA_INSTALL_DIR ${CMAKE_BINARY_DIR}/_nana )
+set( NANA_BUILD_DIR ${CMAKE_BINARY_DIR}/_build_nana )
+file(MAKE_DIRECTORY ${NANA_BUILD_DIR})
+
+set( NANA_LIBRARIES ${NANA_INSTALL_DIR}/lib/libnana.a )
+add_custom_target(nana_local DEPENDS ${NANA_LIBRARIES} )
+add_custom_command( OUTPUT ${NANA_LIBRARIES}
+    COMMAND ${CMAKE_COMMAND} 
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -DCMAKE_BUILD_TYPE=Release
+            -DNANA_CMAKE_ENABLE_PNG=ON
+            -DBUILD_SHARED_LIBS=OFF 
+            -DCMAKE_INSTALL_PREFIX=${NANA_INSTALL_DIR} 
+        ${NANA_SOURCE_DIR}
+    COMMAND $(MAKE) 
+    COMMAND $(MAKE) install
+    WORKING_DIRECTORY ${NANA_BUILD_DIR}
+    COMMENT "Build nana locally"
+    VERBATIM
+    ) 
+
+set(NANA_INCLUDE_DIRS ${NANA_INSTALL_DIR}/include )
+include_directories( ${NANA_INCLUDE_DIRS} )
+
+
+# Check for pkg-config modules. We need to link with their libs.
+find_package( PkgConfig REQUIRED )
+set( OTHER_LIBS "" )
+pkg_check_modules( LIBNOTIFY libnotify REQUIRED )
+list(APPEND OTHER_LIBS ${LIBNOTIFY_LIBRARIES})
+add_definitions( ${LIBNOTIFY_CFLAGS} )
+pkg_check_modules( GDK2 gdk-x11-2.0 )
+list(APPEND OTHER_LIBS ${GDK2_LIBRARIES} )
+pkg_check_modules( X11 x11)
+list(APPEND OTHER_LIBS ${X11_LIBRARIES} )
+pkg_check_modules( XFT xft)
+list(APPEND OTHER_LIBS ${XFT_LIBRARIES} )
+pkg_check_modules( LIBPNG libpng)
+list(APPEND OTHER_LIBS ${LIBPNG_LIBRARIES} )
+pkg_check_modules( FONTCONFIG fontconfig)
+list(APPEND OTHER_LIBS ${FONTCONFIG_LIBRARIES} )
+
+##pkg_check_modules( XRANDR xrandr)
+##list(APPEND OTHER_LIBS ${XRANDR_LIBRARIES} )
+
+# pthreads
+find_package( Threads )
+list(APPEND OTHER_LIBS ${CMAKE_THREAD_LIBS_INIT} )
+
+find_package( Boost REQUIRED COMPONENTS iostreams system filesystem date_time )
+include_directories( ${Boost_INCLUDE_DIRS} )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external/boost-process/include )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external/boost-asio/include )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external/boost-winapi/include )
+
+
+# Add executatble.
+add_executable( chuha ./main.cpp )
+add_dependencies( chuha nana_local )
+target_link_libraries( chuha ${NANA_LIBRARIES} ${OTHER_LIBS} )
+
