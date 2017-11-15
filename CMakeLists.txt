@@ -46,22 +46,6 @@ find_path( ARDUINO_DIR
     PATH_SUFFIXES arduino arduino/avr
     )
 message( STATUS "Arduino location ${ARDUINO_DIR}" )
-
-find_path( ARDUINO_LIQUID_LIB_DIRS 
-    NAMES LiquidCrystal.h 
-    PATHS /usr/share/arduino /opt
-    PATH_SUFFIXES libraries/LiquidCrystal
-    )
-
-# Find directory where LiquidCrystal is installed.
-message( STATUS "Liquid crystal library ${ARDUINO_LIQUID_LIB_DIRS}" )
-if( ARDUINO_LIQUID_LIB_DIRS )
-    set(ARDUINO_EXTRA_CXXFLAGS 
-        "${ARDUINO_EXTRA_CXXFLAGS} -I${ARDUINO_LIQUID_LIB_DIRS}"
-    )
-endif( )
-
-
 if(NOT ARDUINO_DIR)
     message(FATAL_ERROR "Arduino board list not found")
 endif( )
@@ -70,6 +54,9 @@ message(STATUS "List of arduino boards ${ARDUINO_DIR}")
 ################################################################################
 # Animal related options.
 ################################################################################
+set(ANIMAL_NAME "test_animal")
+set(SESSION_TYPE 00)
+set(SESSION_NUM 00)
 if( (NOT ANIMAL_NAME) OR (NOT SESSION_TYPE) OR (NOT SESSION_NUM) )
     message( FATAL_ERROR 
         "Please pass ANIMAL_NAME, SESSION_NUM and SESSION_TYPE to cmake \n"
@@ -172,6 +159,7 @@ add_custom_target( threadmill
 add_subdirectory( ${CMAKE_SOURCE_DIR}/PointGreyCamera )
 
 # NANA
+add_definitions( -std=c++14 )
 add_definitions( -DWITH_NANA )
 set( NANA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/nana )
 set( NANA_INSTALL_DIR ${CMAKE_BINARY_DIR}/_nana )
