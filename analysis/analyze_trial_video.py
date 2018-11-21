@@ -86,7 +86,12 @@ def process( tifffile, plot = True ):
         else:
             #  print( 'x Frame %d has no arduino data' % fi )
             pass
-
+    
+    # All data has been collected into datalines.
+    with open(datafile, 'w' ) as f:
+        for line in datalines:
+            f.write( '%s\n' % line )
+         
     tvec, blinkVec = [ ], [ ] 
     for l in datalines:
         if len(l) > 5:
@@ -102,7 +107,7 @@ def process( tifffile, plot = True ):
         except Exception as e:
             print( '[WARN] Failed to parse data line %s. Ignoring' % l )
             print( '\t Error was %s' % e )
-
+    
     mean_,min_,max_ = sum(blinkVec)/len(blinkVec), min( blinkVec ), max(blinkVec)
 
     #for l in arduinoData:
